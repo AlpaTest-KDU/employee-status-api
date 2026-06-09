@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <div class="card p-4 shadow">
+            <h3 class="mb-4">관리자 페이지</h3>
+
+            <table class="table table-bordered text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>이름</th>
+                        <th>상태</th>
+                        <th>업무량(시간)</th>
+                        <th>할당</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeList">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        const statusColor = {
+            '보통': 'success',
+            '기분 안좋음': 'warning',
+            '아파요': 'danger',
+            '파업중': 'dark'
+        };
+
+        async function loadEmployees() {
+            const res = await fetch('/manager/employee', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const employees = await res.json();
+
+            const tbody = document.getElementById('employeeList');
+            tbody.innerHTML = '';
+
+            employees.forEach(emp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${emp.name}</td>
+                    <td><span class="badge bg-${statusColor[emp.status]}">${emp.status}</span></td>
+                    <td><input type="number" class="form-control" id="workload-${emp._id}" min="1" max="8" style="width: 80px; margin: auto;"></td>
+                    <td><button class="btn btn-primary btn-sm" onclick="assignTask('${emp._id}')">할당</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function assignTask(employeeId) {
+            const workload = document.getElementById(`workload-${employeeId}`).value;
+
+            const res = await fetch('/manager/task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ employeeId, workload: Number(workload) })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert('업무가 할당되었습니다!');
+            } else {
+                alert(data.message);
+            }
+        }
+
+        loadEmployees();
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
