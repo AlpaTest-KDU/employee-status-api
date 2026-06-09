@@ -17,7 +17,7 @@ router.get('/employee', async (req, res, next) => {
 });
 
 // 단일조회
-router.get('/employ/:id', async (req, res, next) => {
+router.get('/employee/:id', async (req, res, next) => {
     try {
         const employee = await Employee.findById(req.params.id);
         if(!employee) {
